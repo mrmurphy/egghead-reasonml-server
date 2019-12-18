@@ -1,22 +1,19 @@
 open Async;
+open Serbet.Endpoint;
 
-module App =
-  Serbet.App({});
+module HelloEndpoint = {
+  [@decco.decode]
+  type params = {name: string};
 
-open App;
+  let endpoint =
+    Serbet.endpoint({
+      verb: GET,
+      path: "/hello/:name",
+      handler: req => {
+        let%Async params = req.requireParams(params_decode);
+        OkString("Hello, " ++ params.name ++ "!!!!!")->async;
+      },
+    });
+};
 
-module HelloEndpoint =
-  App.Handle({
-    let verb = GET;
-    let path = "/hello/:name";
-
-    [@decco.decode]
-    type params = {name: string};
-
-    let handler = req => {
-      let%Async params = requireParams(params_decode, req);
-      OkString("Hello, " ++ params.name ++ "!!!!!")->async;
-    };
-  });
-
-App.start(~port=1337, ());
+let app = Serbet.application([HelloEndpoint.endpoint]);
